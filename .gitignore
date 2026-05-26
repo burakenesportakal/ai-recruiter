@@ -1,0 +1,33 @@
+# Bağımlılıklar
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Hassas bilgiler - ASLA GitHub'a gitmesin
+.env
+server/.env
+client/.env
+
+# Yüklenen dosyalar
+server/uploads/
+
+# Build dosyaları
+client/dist/
+
+# Log dosyaları
+*.log
+npm-debug.log*
+
+# Sistem dosyaları
+.DS_Store
+Thumbs.db
+
+# Visual Studio / VS Code Dosyaları
+.vs/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.user
