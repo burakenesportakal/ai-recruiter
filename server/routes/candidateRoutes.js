@@ -52,7 +52,7 @@ router.post('/upload-cv', upload.single('cvFile'), async (req, res) => {
     }
 
     // 2. Gemini'ye Gönder
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
     const prompt = `
       Sen profesyonel bir Teknik İşe Alım Uzmanısın (IT Recruiter). 
       Aşağıda bir adayın özgeçmişinden/portfolyosundan çıkarılmış metin bulunuyor.

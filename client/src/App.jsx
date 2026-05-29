@@ -9,7 +9,7 @@ import PublicProfile from './pages/PublicProfile';
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center text-gray-500">
+    <div className="page-dark flex items-center justify-center text-gray-400">
       Yükleniyor...
     </div>
   );
