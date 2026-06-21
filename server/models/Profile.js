@@ -11,7 +11,7 @@ const ProfileSchema = new mongoose.Schema({
   bio: {
     type: String,
     default: '',
-    maxlength: 500,
+    maxlength: 1000,
   },
   title: {
     type: String,

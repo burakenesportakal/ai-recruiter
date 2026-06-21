@@ -5,107 +5,102 @@ const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// JWT token üret
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
+    return jwt.sign({ id }, process.env.JWT_SECRET, {
+        expiresIn: '7d',
+    });
 };
 
-// Cookie'ye token yaz
 const sendTokenResponse = (user, statusCode, res) => {
-  const token = generateToken(user._id);
+    const token = generateToken(user._id);
 
-  res.cookie('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
-  });
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
 
-  res.status(statusCode).json({
-    success: true,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
-  });
+    res.status(statusCode).json({
+        success: true,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        },
+    });
 };
 
-// POST /api/auth/register
 router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+    console.log('🔥 Register route hit', req.body);
+    try {
+        const { name, email, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Tüm alanları doldurun.' });
-    }
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Tüm alanları doldurun.' });
+        }
 
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Şifre en az 6 karakter olmalıdır.' });
-    }
+        if (password.length < 6) {
+            return res.status(400).json({ error: 'Şifre en az 6 karakter olmalıdır.' });
+        }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'Bu email zaten kullanımda.' });
-    }
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ error: 'Bu email zaten kullanımda.' });
+        }
 
-    const user = await User.create({ name, email, password });
-    console.log(`✅ Yeni kullanıcı: ${user.email}`);
+        const user = await User.create({ name, email, password });
+        console.log(`✅ Yeni kullanıcı: ${user.email}`);
 
-    sendTokenResponse(user, 201, res);
-  } catch (error) {
-  console.error('Register hatası DETAY:', error); // ← bunu değiştir
-  res.status(500).json({ error: 'Kayıt sırasında hata oluştu.', detay: error.message });
+        sendTokenResponse(user, 201, res);
+    } catch (error) {
+        console.error('Register hatası DETAY:', error);
+        res.status(500).json({ error: 'Kayıt sırasında hata oluştu.', detay: error.message });
     }
 });
 
-// POST /api/auth/login
 router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email ve şifre zorunludur.' });
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email ve şifre zorunludur.' });
+        }
+
+        const user = await User.findOne({ email }).select('+password');
+        if (!user) {
+            return res.status(401).json({ error: 'Email veya şifre hatalı.' });
+        }
+
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ error: 'Email veya şifre hatalı.' });
+        }
+
+        console.log(`✅ Giriş yapıldı: ${user.email}`);
+        sendTokenResponse(user, 200, res);
+    } catch (error) {
+        console.error('Login hatası:', error.message);
+        res.status(500).json({ error: 'Giriş sırasında hata oluştu.' });
     }
-
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({ error: 'Email veya şifre hatalı.' });
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Email veya şifre hatalı.' });
-    }
-
-    console.log(`✅ Giriş yapıldı: ${user.email}`);
-    sendTokenResponse(user, 200, res);
-  } catch (error) {
-    console.error('Login hatası:', error.message);
-    res.status(500).json({ error: 'Giriş sırasında hata oluştu.' });
-  }
 });
 
-// POST /api/auth/logout
 router.post('/logout', (req, res) => {
-  res.cookie('token', '', { expires: new Date(0) });
-  res.json({ success: true, message: 'Çıkış yapıldı.' });
+    res.cookie('token', '', { expires: new Date(0) });
+    res.json({ success: true, message: 'Çıkış yapıldı.' });
 });
 
-// GET /api/auth/me — oturum açık mı kontrol et
 router.get('/me', protect, (req, res) => {
-  res.json({
-    success: true,
-    user: {
-      id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-    },
-  });
+    res.json({
+        success: true,
+        user: {
+            id: req.user._id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+        },
+    });
 });
 
 module.exports = router;
